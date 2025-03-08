@@ -3,7 +3,7 @@ import json
 import os
 import time
 from datetime import datetime, timedelta
-
+import threading
 import requests
 
 from dailysignin.__version__ import __version__
@@ -90,6 +90,17 @@ def check_config(task_list):
         )
         return False, False
 
+def perform_checkin(check_name, check_func, check_item, index, notice_info):
+    try:
+        # 执行签到函数并获取结果
+        msg = check_func(check_item).main()
+        # 推送签到结果
+        push_message(content_list=[f"「{check_name}」\n{msg}"], notice_info=notice_info)
+        print(f"第 {index + 1} 个账号: ✅✅✅✅✅ msg-->", msg)
+    except Exception as e:
+        # 如果签到失败，推送错误信息
+        push_message(content_list=[f"「{check_name}」\n{e}"], notice_info=notice_info)
+        print(f"第 {index + 1} 个账号: ❌❌❌❌❌\n{e}")
 
 # 主函数，执行签到任务
 def checkin():
@@ -130,25 +141,27 @@ def checkin():
             ]
         )
         # 打印本次执行的签到任务
-        print(f"\n---------- 本次执行签到任务如下 ----------\n\n{task_name_str}\n\n")
+        print(f"\n---------- 本次执行签到任务如下 ----------\n\n{task_name_str}")
+
+        # 创建一个线程列表
+        threads = []
         content_list = []
         # 遍历每个任务和对应的签到信息
         for one_check, check_list in check_info.items():
             # 获取任务名称和对应的签到函数
             check_name, check_func = checkin_map.get(one_check.upper())
-            print(f"----------开始执行「{check_name}」签到----------")
+            print(f"\n\n----------开始执行「{check_name}」签到----------")
             # 遍历每个账号的签到信息
             for index, check_item in enumerate(check_list):
-                try:
-                    # 执行签到函数并获取结果
-                    msg = check_func(check_item).main()
-                    # 将签到结果添加到内容列表中
-                    content_list.append(f"「{check_name}」\n{msg}")
-                    print(f"第 {index + 1} 个账号: ✅✅✅✅✅")
-                except Exception as e:
-                    # 如果签到失败，将错误信息添加到内容列表中
-                    content_list.append(f"「{check_name}」\n{e}")
-                    print(f"第 {index + 1} 个账号: ❌❌❌❌❌\n{e}")
+                # 创建线程并启动
+                thread = threading.Thread(target=perform_checkin,
+                                          args=(check_name, check_func, check_item, index, notice_info))
+                thread.start()
+                threads.append(thread)
+            # 等待所有线程完成
+            for thread in threads:
+                thread.join()
+
         print("\n\n")
         try:
             # 获取最新版本信息
@@ -164,10 +177,13 @@ def checkin():
             f"任务用时: {int(time.time() - start_time)} 秒\n"
             f"当前版本: {__version__}\n"
             f"最新版本: {latest_version}\n"
-            f"项目地址: https://github.com/Sitoi/dailysignin"
+            f"项目地址: https://github.com/tina0597/dailysignin"
         )
+
+        # print(1111,content_list[0])
+        # print(22222,content_list[1])
         # 推送消息
-        push_message(content_list=content_list, notice_info=notice_info)
+        # push_message(content_list=content_list, notice_info=notice_info)
         return
 
 

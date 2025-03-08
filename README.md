@@ -72,7 +72,7 @@
 
 ## 📝 License
 
-Copyright © 2021 [Sitoi][profile-link]. <br />
-This project is [MIT](https://github.com/Sitoi/dailysignin/blob/main/LICENSE) licensed.
+Copyright © 2021 [Tina][profile-link]. <br />
+This project is [MIT](https://github.com/tina0597/dailysignin/blob/main/LICENSE) licensed.
 
 <!-- LINK GROUP -->

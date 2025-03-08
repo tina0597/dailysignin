@@ -156,8 +156,8 @@ def message2qywxapp(
                     {
                         "title": "Dailysignin 签到通知",
                         "thumb_media_id": qywx_media_id,
-                        "author": "Sitoi",
-                        "content_source_url": "https://github.com/Sitoi/Dailysignin",
+                        "author": "Tina",
+                        "content_source_url": "https://github.com/tina0597/Dailysignin",
                         "content": content.replace("\n", "<br>"),
                         "digest": content,
                     }
@@ -172,7 +172,7 @@ def message2qywxapp(
             "textcard": {
                 "title": "Dailysignin 签到通知",
                 "description": content,
-                "url": "https://github.com/Sitoi/dailysignin",
+                "url": "https://github.com/tina0597/dailysignin",
                 "btntxt": "开源项目",
             },
         }
@@ -193,7 +193,30 @@ def message2pushplus(pushplus_token, content, pushplus_topic=None):
     }
     if pushplus_topic:
         data["topic"] = pushplus_topic
-    requests.post(url="http://www.pushplus.plus/send", data=json.dumps(data))
+    response = requests.post(url="http://www.pushplus.plus/send", data=json.dumps(data)).text
+    if response is not None:  # 如果请求成功
+        try:
+            # 解析服务器返回的 JSON 数据
+            response_data = json.loads(response)
+            code = response_data.get('code', -1)  # 获取 code 字段，默认为 -1（防止 KeyError）
+            msg = response_data.get('msg', '未知错误')  # 获取 msg 字段，默认为 '未知错误'
+
+            if code == 0:  # 如果 code 为 0，推送成功
+                print('📤--->> Push Plus消息推送(成功)')
+                print("------------------------\n")
+                # return response_data  # 返回解析后的 JSON 数据
+            else:  # 如果 code 不为 0，推送失败
+                print(f'🚨--->>  Push Plus消息推送(失败),  错误码: {code}, 错误信息: {msg}')
+                print("------------------------\n")
+                # return None
+        except json.JSONDecodeError:  # 如果返回的数据不是合法的 JSON
+            print('🚨--->> Push Plus消息推送(失败), 服务器返回数据格式错误')
+            print("------------------------\n")
+            # return None
+    else:  # 如果请求失败
+        print(f'🚨--->> Push Plus消息推送(失败)')
+        print("------------------------\n")
+        # return None
     return
 
 
@@ -247,7 +270,7 @@ def message2ntfy(
 
 def important_notice():
     datas = requests.get(
-        url="https://api.github.com/repos/Sitoi/dailysignin/issues?state=open&labels=通知"
+        url="https://api.github.com/repos/tina0597/dailysignin/issues?state=open&labels=通知"
     ).json()
     if datas:
         data = datas[0]
